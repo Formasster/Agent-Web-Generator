@@ -5,4 +5,4 @@ class WebPlanDTO(BaseModel):
     site_type: str
     sections: List[str]
     style: str
-    images: Optional[List[str]]
+    images: List[str]
