@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.routes import router
+from app.api.routes.generate import router
 
 app = FastAPI(title="AI Web Builder")
 

@@ -31,6 +31,7 @@ class WebBuilderAgent:
             site_type="landing",
             sections=["hero", "features", "pricing", "contact"],
             style="modern saas"
+            
         )
 
     async def run(self, prompt_dto: PromptDTO) -> GeneratedPageDTO:
