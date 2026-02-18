@@ -7,6 +7,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+db_user_name = os.getenv("DATABASE_USERNAME", "postgres")
+db_password = os.getenv("DATABASE_PASSWORD", "postgres")
+db_host = os.getenv("DATABASE_HOSTNAME", "localhost")
+db_port = os.getenv("DATABASE_PORT", "5432")
+db_name = os.getenv("DATABASE_NAME", "boilerplate_db")
+db_search_path = os.getenv("DATABASE_SEARCH_PATH", "public")
+db_pool_size = int(os.getenv("DATABASE_POOL_SIZE", 10))
+db_pool_size_overflow = int(os.getenv("DATABASE_POOL_SIZE_OVERFLOW", 10))
+
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv(
