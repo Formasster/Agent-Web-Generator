@@ -32,6 +32,34 @@ _lock = asyncio.Lock()  # Evita condición de carrera en inicialización concurr
 
 async def _initialize():
     global _toolset, _runner, _session, _session_service
+    async with _lock:
+        if _runner is not None:
+            return
+    
+
+    if _runner is not None:
+        return
+
+    _toolset = McpToolset(
+        connection_params=StreamableHTTPConnectionParams(
+            url="https://stitch.googleapis.com/mcp",
+            headers={
+                "Accept": "application/json",
+                "X-Goog-Api-Key": STITCH_API_KEY
+            },
+        ),
+    )
+
+    root_agent = Agent(
+        name="stitch_agent",
+        model="gemini-2.5-flash",
+        instruction=(
+            "You are a UI design assistant powered by Google Stitch. "
+            "Generate complete, responsive HTML/CSS/JS pages based on the user's plan. "
+            "Return only valid HTML code, no explanations."
+        ),
+        tools=[_toolset],
+    )
 
     async with _lock:
         if _runner is not None:
