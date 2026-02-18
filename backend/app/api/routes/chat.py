@@ -1,13 +1,23 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from app.agents.web_builder_agent import WebBuilderAgent
 from app.dto.prompt_dto import PromptDTO
+from app.db.database import get_db
+from app.db import repository
+import asyncio
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
+agent = WebBuilderAgent()
+
 
 class ChatMessage(BaseModel):
     message: str
+    session_id: str  # El frontend genera y envía este ID
+
 
 @router.get("/chat", response_class=HTMLResponse)
 async def chat_page():
@@ -192,6 +202,17 @@ async def chat_page():
         </div>
 
         <script>
+            // Genera o recupera session_id persistente en localStorage
+            function getSessionId() {
+                let sid = localStorage.getItem('session_id');
+                if (!sid) {
+                    sid = crypto.randomUUID();
+                    localStorage.setItem('session_id', sid);
+                }
+                return sid;
+            }
+
+            const SESSION_ID = getSessionId();
             const messageInput = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
             const messagesDiv = document.getElementById('messages');
@@ -211,7 +232,6 @@ async def chat_page():
                 messageInput.value = '';
                 sendBtn.disabled = true;
 
-                // Indicador de carga
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'message agent';
                 loadingDiv.innerHTML = '<div class="message-content typing-indicator"><span></span><span></span><span></span></div>';
@@ -222,7 +242,7 @@ async def chat_page():
                     const response = await fetch('/api/chat/message', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message })
+                        body: JSON.stringify({ message, session_id: SESSION_ID })
                     });
 
                     loadingDiv.remove();
@@ -253,12 +273,10 @@ async def chat_page():
                 const div = document.createElement('div');
                 div.className = 'message agent';
 
-                // Si parece HTML generado, mostrarlo en iframe
                 if (html.trim().startsWith('<!DOCTYPE') || html.trim().startsWith('<html')) {
                     const encoded = html.replace(/"/g, '&quot;');
                     div.innerHTML = `<iframe srcdoc="${encoded}"></iframe>`;
                 } else {
-                    // Si es texto normal, mostrarlo como mensaje
                     div.innerHTML = `<div class="message-content">${escapeHtml(html)}</div>`;
                 }
 
@@ -289,17 +307,37 @@ async def chat_page():
     </html>
     """
 
+
 @router.post("/api/chat/message")
-async def chat_message(request: ChatMessage):
+async def chat_message(request: ChatMessage, db: Session = Depends(get_db)):
     user_message = request.message.strip()
 
     if not user_message:
         return {"response": "Por favor envía un mensaje."}
 
     try:
-        agent = WebBuilderAgent()
+        # Obtener o crear usuario por session_id
+        user = repository.get_or_create_user(db, request.session_id)
+
+        # Guardar mensaje del usuario
+        repository.save_message(db, user.id, "user", user_message)
+        logger.info(f"Mensaje recibido de sesión {request.session_id}: {user_message[:50]}")
+
+        # Generar página
         prompt_dto = PromptDTO(prompt=user_message)
         result = await agent.run(prompt_dto)
+
+        # Determinar site_type desde el plan
+        plan = agent.analyze_prompt(user_message)
+        site_type = plan.site_type
+
+        # Guardar página generada y respuesta del agente
+        repository.save_generated_page(db, user.id, user_message, site_type, result.html)
+        repository.save_message(db, user.id, "agent", result.html)
+        logger.info(f"Página generada ({site_type}) para sesión {request.session_id}")
+
         return {"response": result.html}
+
     except Exception as e:
+        logger.error(f"Error procesando mensaje: {str(e)}", exc_info=True)
         return {"response": f"Error al procesar tu mensaje: {str(e)}"}

@@ -1,6 +1,7 @@
 from app.dto.prompt_dto import PromptDTO
 from app.dto.web_plan_dto import WebPlanDTO
 from app.dto.result_dto import GeneratedPageDTO
+import asyncio
 from app.services.page_generator import PageGenerator
 
 class WebBuilderAgent:
