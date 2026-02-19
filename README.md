@@ -1,24 +1,24 @@
-# pyproyect.toml
+# Agent-Web-Generator
 
 [![PyPI - Version](https://img.shields.io/pypi/v/pyproyect-toml.svg)](https://pypi.org/project/pyproyect-toml)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyproyect-toml.svg)](https://pypi.org/project/pyproyect-toml)
 
------
+🚀 Generación automática de páginas web usando **FastAPI**, **Gemini ADK** y **Stitch MCP Server**.
 
-## Table of Contents
+---
 
-- [Installation](#installation)
-- [License](#license)
+## 🧩 Descripción
 
-## Installation
+Agent-Web-Generator permite:
 
-```console
-pip install pyproyect-toml
-```
+- Analizar prompts de usuario
+- Generar planes de construcción web automáticamente
+- Crear HTML/CSS listo para usar
+- Integración con herramientas Gemini ADK y Stitch MCP
 
-## License
+Es ideal para generar **landing pages**, **e-commerce** o **portfolios** de manera automática a partir de un simple texto.
 
-`pyproyect-toml` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
+---
 
 
 ┌─────────────────────────────────────────────────┐
