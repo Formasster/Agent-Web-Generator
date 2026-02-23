@@ -52,7 +52,7 @@ async def _initialize():
 
         root_agent = Agent(
             name="stitch_agent",
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             instruction=(
                 "You are a professional web UI generator powered by Google Stitch. "
                 "Generate complete, responsive HTML/CSS/JS pages based on the user's plan. "
