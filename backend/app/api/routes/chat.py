@@ -7,7 +7,6 @@ from app.dto.prompt_dto import PromptDTO
 from app.db.database import get_db
 from app.db import repository
 from app.services.file_storage import save_page
-import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
@@ -226,6 +225,7 @@ async def chat_page():
                 <div class="message agent">
                     <div class="message-content">
                         ¡Hola! Soy tu asistente de diseño web. Dime qué página quieres crear:<br/><br/>
+                        • <b>Cualquier tipo de negocio</b> → "quiero una web para mi clínica dental"<br/>
                         • <b>Tienda online</b> → "quiero una tienda de ropa"<br/>
                         • <b>Portfolio</b> → "crea mi portfolio de diseñador"<br/>
                         • <b>Landing page</b> → "landing para mi startup de IA"<br/><br/>
@@ -423,19 +423,19 @@ async def chat_message(request: ChatMessage, db: Session = Depends(get_db)):
         logger.info(f"Mensaje recibido de sesión {request.session_id}: {user_message[:50]}")
 
         prompt_dto = PromptDTO(prompt=user_message)
+
+        # run() hace clasificación + generación en una sola pasada
+        # site_type viene propagado en el resultado — sin segunda llamada a Gemini
         result = await agent.run(prompt_dto)
 
-        plan = agent.analyze_prompt(user_message)
-        site_type = plan.site_type
-
-        repository.save_generated_page(db, user.id, user_message, site_type, result.html)
+        repository.save_generated_page(db, user.id, user_message, result.site_type, result.html)
         repository.save_message(db, user.id, "agent", result.html)
-        logger.info(f"Página generada ({site_type}) para sesión {request.session_id}")
+        logger.info(f"Página generada ({result.site_type}) para sesión {request.session_id}")
 
         file_meta = save_page(
             html=result.html,
             prompt=user_message,
-            site_type=site_type,
+            site_type=result.site_type,
             session_id=request.session_id,
         )
         logger.info(f"Archivos guardados en disco: {file_meta['page_id']}")

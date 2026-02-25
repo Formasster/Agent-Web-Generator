@@ -22,7 +22,7 @@ ColorScheme = Literal["light", "dark", "auto"]
 class WebCustomizationDTO(BaseModel):
     sections: Optional[List[SectionType]] = None
     """Si se envía, el agente usará exactamente estas secciones en el orden indicado.
-    Si es None, el agente decide las secciones según el tipo de sitio detectado."""
+    Si es None, Gemini decide las secciones según el tipo de sitio detectado."""
 
     style: Optional[str] = None
     """Descripción libre del estilo deseado. Ej: 'minimal', 'bold', 'corporate', 'playful'."""
